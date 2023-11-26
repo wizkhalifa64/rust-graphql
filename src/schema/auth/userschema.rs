@@ -49,6 +49,8 @@ pub struct UserResponse {
     pub user: User,
     pub token: String,
 }
+
+#[derive(Default)]
 pub struct UserMutation;
 
 #[Object]

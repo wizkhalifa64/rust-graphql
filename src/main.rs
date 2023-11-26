@@ -11,7 +11,7 @@ use axum::{
     Json, Router,
 };
 use dotenv::dotenv;
-use schema::auth::userschema::UserMutation;
+use schema::Mutation;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 
 use crate::config::dbconfig::Config;
@@ -41,13 +41,13 @@ impl QueryRoot {
 }
 
 struct AppState {
-    schema: Schema<QueryRoot, UserMutation, EmptySubscription>,
+    schema: Schema<QueryRoot, Mutation, EmptySubscription>,
 }
 struct DbState {
     db: Pool<Postgres>,
     env: Config,
 }
-type MySchema = Schema<QueryRoot, UserMutation, EmptySubscription>;
+type MySchema = Schema<QueryRoot, Mutation, EmptySubscription>;
 async fn graphql_handler(
     schema: State<MySchema>,
     _headers: HeaderMap,
@@ -81,7 +81,7 @@ async fn main() {
         db: pool.clone(),
         env: config.clone(),
     };
-    let schema = Schema::build(QueryRoot, UserMutation, EmptySubscription).data(db);
+    let schema = Schema::build(QueryRoot, Mutation::default(), EmptySubscription).data(db);
     let state = AppState {
         schema: schema.finish(),
     };
