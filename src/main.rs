@@ -5,7 +5,10 @@ use async_graphql::{
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
 use axum::{
     extract::State,
-    http::HeaderMap,
+    http::{
+        header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
+        HeaderMap, HeaderValue, Method,
+    },
     response::{Html, IntoResponse},
     routing::{get, post},
     Json, Router,
@@ -13,6 +16,7 @@ use axum::{
 use dotenv::dotenv;
 use schema::Mutation;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use tower_http::cors::CorsLayer;
 
 use crate::config::dbconfig::Config;
 
@@ -89,7 +93,15 @@ async fn main() {
         .route("/api/healthchecker", get(health_checker_handler))
         .route("/graphql", post(graphql_handler))
         .route("/playground", get(graphql_playground))
-        .with_state(state.schema);
+        .with_state(state.schema)
+        .layer(
+            CorsLayer::new()
+                .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
+                .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
+                .allow_credentials(true)
+                .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]),
+        );
+
     println!("🚀 Server started successfully");
     axum::Server::bind(&"0.0.0.0:8000".parse().unwrap())
         .serve(app.into_make_service())
