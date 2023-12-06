@@ -1,9 +1,9 @@
 use async_graphql::MergedObject;
 
-use self::{auth::userschema::UserMutation, home::fileread::FileMutation};
+use self::home::fileread::FileMutation;
 
-pub mod auth;
+// pub mod auth;
 pub mod home;
 
 #[derive(Default, MergedObject)]
-pub struct Mutation(UserMutation, FileMutation);
+pub struct Mutation(FileMutation);

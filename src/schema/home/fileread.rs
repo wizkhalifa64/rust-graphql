@@ -17,7 +17,7 @@ impl FileMutation {
         let file = upload.content;
         let df = CsvReader::new(file)
             .truncate_ragged_lines(true)
-            // .infer_schema(None)
+            .infer_schema(Some(100))
             .has_header(true)
             .finish()?;
         let df_head = df.clone().head(Some(body.headcount));
