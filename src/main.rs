@@ -13,12 +13,12 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use dotenv::dotenv;
+// use dotenv::dotenv;
 use schema::Mutation;
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+// use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use tower_http::cors::CorsLayer;
 
-use crate::config::dbconfig::Config;
+// use crate::config::dbconfig::Config;
 
 pub mod config;
 pub mod schema;
@@ -47,10 +47,10 @@ impl QueryRoot {
 struct AppState {
     schema: Schema<QueryRoot, Mutation, EmptySubscription>,
 }
-struct DbState {
-    db: Pool<Postgres>,
-    env: Config,
-}
+// struct DbState {
+//     db: Pool<Postgres>,
+//     env: Config,
+// }
 type MySchema = Schema<QueryRoot, Mutation, EmptySubscription>;
 async fn graphql_handler(
     schema: State<MySchema>,
@@ -64,28 +64,29 @@ async fn graphql_playground() -> impl IntoResponse {
 }
 #[tokio::main]
 async fn main() {
-    dotenv().ok();
-    let config = Config::init();
+    // dotenv().ok();
+    // let config = Config::init();
 
-    let pool = match PgPoolOptions::new()
-        .max_connections(10)
-        .connect(&config.database_url)
-        .await
-    {
-        Ok(pool) => {
-            println!("✅Connection to the database is successful!");
-            pool
-        }
-        Err(err) => {
-            println!("🔥 Failed to connect to the database: {:?}", err);
-            std::process::exit(1);
-        }
-    };
-    let db = DbState {
-        db: pool.clone(),
-        env: config.clone(),
-    };
-    let schema = Schema::build(QueryRoot, Mutation::default(), EmptySubscription).data(db);
+    // let pool = match PgPoolOptions::new()
+    //     .max_connections(10)
+    //     .connect(&config.database_url)
+    //     .await
+    // {
+    //     Ok(pool) => {
+    //         println!("✅Connection to the database is successful!");
+    //         pool
+    //     }
+    //     Err(err) => {
+    //         println!("🔥 Failed to connect to the database: {:?}", err);
+    //         std::process::exit(1);
+    //     }
+    // };
+    // let db = DbState {
+    //     db: pool.clone(),
+    //     env: config.clone(),
+    // };
+    let schema = Schema::build(QueryRoot, Mutation::default(), EmptySubscription);
+    // .data(db);
     let state = AppState {
         schema: schema.finish(),
     };
