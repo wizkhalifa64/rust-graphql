@@ -1,9 +1,8 @@
 use async_graphql::MergedObject;
 
-use self::home::fileread::FileMutation;
+use self::{home::fileread::FileMutation, scraper::myscraper::ScraperMutation};
 
-// pub mod auth;
 pub mod home;
-
+pub mod scraper;
 #[derive(Default, MergedObject)]
-pub struct Mutation(FileMutation);
+pub struct Mutation(FileMutation, ScraperMutation);
