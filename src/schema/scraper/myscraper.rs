@@ -1,8 +1,8 @@
+use super::myscrapermodel::ScraperBody;
 use async_graphql::{Context, Object, Result, Upload};
+use polars::prelude::*;
 use reqwest::Client;
 use scraper::{Html, Selector};
-
-use super::myscrapermodel::ScraperBody;
 #[derive(Default)]
 pub struct ScraperMutation;
 #[Object]
@@ -21,6 +21,16 @@ impl ScraperMutation {
                 return Err("File type not supported".to_string().into());
             }
         };
+        let data_frame = CsvReader::new(upload_file.content)
+            .truncate_ragged_lines(true)
+            .infer_schema(Some(100))
+            .has_header(true)
+            .finish()?;
+        let selected_df = data_frame.clone().select(["city"]).map(|s| {
+            let city = s.column("city").unwrap();
+            let city_list: Vec<_> = city.utf8().into_iter().collect();
+            println!("{:?}", city_list.get(0));
+        });
 
         let scrat_ctx = Client::builder().user_agent(USER_AGENT).build().unwrap();
         let url = format!("https://en.wikipedia.org/wiki/mumbai_airport");
