@@ -43,9 +43,8 @@ impl ScraperMutation {
                     let scrap_text = html
                         .select(&selector)
                         .map(|x| x.text().next().unwrap().to_string())
-                        .collect::<Vec<String>>();
-                    println!("{:?}", scrap_text);
-                    Ok("Hi".to_string())
+                        .collect::<String>();
+                    return Ok(scrap_text);
                 }
                 Err(_) => Err("Unable to scrap".to_string()),
             };
