@@ -57,13 +57,21 @@ impl ScraperMutation {
             Ok(data) => {
                 let new_body = data.text().await?;
                 let html = Html::parse_fragment(&new_body);
-                let selector =
-                    Selector::parse("table[class= 'infobox vcard' ]  tbody  div[class= 'hlist' ]")
+                let selector_th =
+                    // Selector::parse("table[class= 'infobox vcard' ]  tbody  div[class= 'hlist' ]")
+                    Selector::parse("table[class= 'infobox vcard' ]  th")
+                        .unwrap();
+                let selector_td =
+                    // Selector::parse("table[class= 'infobox vcard' ]  tbody  div[class= 'hlist' ]")
+                    Selector::parse("table[class= 'infobox vcard' ]  td")
                         .unwrap();
 
                 let scrap_text = html
-                    .select(&selector)
-                    .map(|x| x.text().next().unwrap().to_string())
+                    .select(&selector_td)
+                    .map(|x| match x.text().next() {
+                        Some(val) => val.to_string(),
+                        None => "Na".to_string(),
+                    })
                     .collect::<Vec<String>>();
                 return Ok(scrap_text);
             }
