@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use async_graphql::{
     http::{playground_source, GraphQLPlaygroundConfig},
     Context, EmptySubscription, Object, Schema,
@@ -12,11 +14,13 @@ use axum::{
     routing::get,
     Router,
 };
+use config::{dbconfig::DB, dberror::MyError};
+use dotenv::dotenv;
 use schema::Mutation;
 use tower_http::cors::CorsLayer;
 
+pub mod config;
 pub mod schema;
-
 struct QueryRoot;
 
 #[Object(cache_control(max_age = 60))]
@@ -32,9 +36,17 @@ impl QueryRoot {
 async fn graphql_playground() -> impl IntoResponse {
     Html(playground_source(GraphQLPlaygroundConfig::new("/graphql")))
 }
+pub struct AppState {
+    pub db: DB,
+}
 #[tokio::main]
-async fn main() {
-    let schema = Schema::build(QueryRoot, Mutation::default(), EmptySubscription).finish();
+async fn main() -> Result<(), MyError> {
+    dotenv().ok();
+
+    let db = DB::init().await?;
+    let schema = Schema::build(QueryRoot, Mutation::default(), EmptySubscription)
+        .data(AppState { db: db.clone() })
+        .finish();
 
     let app = Router::new()
         .route(
@@ -54,4 +66,5 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
+    Ok(())
 }

@@ -1,3 +1,5 @@
+use crate::AppState;
+
 use super::myscrapermodel::ScraperBody;
 use async_graphql::{Context, Object, Result, Upload};
 use polars::prelude::*;
@@ -12,7 +14,7 @@ impl ScraperMutation {
         ctx: &Context<'_>,
         body: ScraperBody,
         file: Upload,
-    ) -> Result<Vec<String>> {
+    ) -> Result<String> {
         const USER_AGENT: &str =
             "Mozilla/5.0 (Linux x86_64; rv:115.0) Gecko/20100101 Firefox/115.0";
         let scrat_ctx = Client::builder().user_agent(USER_AGENT).build().unwrap();
@@ -53,27 +55,35 @@ impl ScraperMutation {
         // }
         let url = format!("https://en.wikipedia.org/wiki/{}", body.airport);
         let res = scrat_ctx.get(url).send().await.map_err(|err| err);
-        let body: Result<Vec<String>, String> = match res {
+        let body: Result<String, String> = match res {
             Ok(data) => {
                 let new_body = data.text().await?;
                 let html = Html::parse_fragment(&new_body);
+                let db = &ctx.data::<AppState>()?.db;
+                let selector_header =
+                    Selector::parse("table[class= 'infobox vcard' ]  tbody  div").unwrap();
                 let selector_th =
                     // Selector::parse("table[class= 'infobox vcard' ]  tbody  div[class= 'hlist' ]")
                     Selector::parse("table[class= 'infobox vcard' ]  th")
                         .unwrap();
-                let selector_td =
-                    // Selector::parse("table[class= 'infobox vcard' ]  tbody  div[class= 'hlist' ]")
-                    Selector::parse("table[class= 'infobox vcard' ]  td")
-                        .unwrap();
-
-                let scrap_text = html
+                let selector_td = Selector::parse("table[class= 'infobox vcard' ]  td").unwrap();
+                let airportHeader = html
+                    .select(&selector_header)
+                    .map(|elm| match elm.text().next() {
+                        Some(val) => Some(val.to_string()),
+                        None => None,
+                    })
+                    .collect::<Option<String>>();
+                // let new_airport = CreateAirportDetails {};
+                let scrap_text: Option<String> = html
                     .select(&selector_td)
                     .map(|x| match x.text().next() {
-                        Some(val) => val.to_string(),
-                        None => "Na".to_string(),
+                        Some(val) => Some(val.to_string()),
+                        None => None,
                     })
-                    .collect::<Vec<String>>();
-                return Ok(scrap_text);
+                    .collect::<Option<String>>();
+                println!("{:?}", scrap_text);
+                return Ok("Completed".to_string());
             }
             Err(_) => Err("Unable to scrap".to_string()),
         };
